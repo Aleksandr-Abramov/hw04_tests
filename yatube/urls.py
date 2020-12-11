@@ -16,7 +16,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     #  обработчик для главной страницы ищем в urls.py приложения posts
-    path("", include("posts.urls")),
-    path('about-us/', views.flatpage, {'url': '/about-us/'}, name='about'),
+    path('about-us/', views.flatpage, {'url': '/about-author/'}, name='about'),
     path('terms/', views.flatpage, {'url': '/terms/'}, name='terms'),
+    path("", include("posts.urls")),
 ]

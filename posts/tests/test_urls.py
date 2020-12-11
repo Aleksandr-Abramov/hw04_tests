@@ -26,15 +26,35 @@ class StaticURLTests(TestCase):
         )
         cls.post = Post.objects.get(id=1)
 
+        site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
+        site.save()
+
+        cls.flat_about = FlatPage.objects.create(
+            url=reverse('about-author'),
+            title='about me',
+            content='<b>some content</b>')
+
+        cls.flat_spec = FlatPage.objects.create(
+            url=reverse('terms'),
+            title='about me',
+            content='<b>some content</b>'
+        )
+        cls.flat_about.sites.add(site)
+        cls.flat_spec.sites.add(site)
+
         cls.page_urls = {
             "/": "index.html",
             "/new/": "new.html",
             "/group/{}/".format(StaticURLTests.group.slug): "group.html",
             "/{}/".format(str(StaticURLTests.user)): "profile.html",
             "/{}/{}/".format(str(StaticURLTests.user), StaticURLTests.post.id): "post.html",
-            # "/about/about-author/": "flatpages/default.html",
+            # "/{}/{}/edit".format(str(StaticURLTests.user), StaticURLTests.post.id): "post_new.html",
+            reverse("about"): "flatpages/default.html",
+            reverse("terms"): "flatpages/default.html",
             # "/about-spec/": "flatpages/default.html"
         }
+
+
 
 
 
@@ -44,18 +64,30 @@ class StaticURLTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-        self.page = FlatPage.objects.create(
-            url="/about-author/",
-            title="Об авторе",
-        )
+        # site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
+        # site.save()
+        #
+        # self.flat_about = FlatPage.objects.create(
+        #     url=reverse('about-author'),
+        #     title='about me',
+        #     content='<b>some content</b>')
+        #
+        # self.flat_spec = FlatPage.objects.create(
+        #     url=reverse('terms'),
+        #     title='about me',
+        #     content='<b>some content</b>'
+        # )
+        # self.flat_about.sites.add(site)
+        # self.flat_spec.sites.add(site)
 
-    def test_flat(self):
-
-        response = self.authorized_client.get(self.page.url)
-        print(response.status_code, response.content)
-        # response = self.guest_client.get("/absout-author/")
-        # response = self.guest_client.get(self.about_author.url)
-        self.assertEqual(response.status_code, 200, "Ошибка")
+    # def test_flat_pages_response(self):
+    #     """Проверяем доступность статических страниц"""
+    #     for url in (reverse('about-author'), reverse('about-spec')):
+    #         with self.subTest(url=url):
+    #             response = self.guest_client.get(url)
+    #             self.assertEqual(response.status_code, 200)
+    #     response = self.guest_client.get(self.flat_about.url)
+    #     self.assertEqual(response.status_code, 200, "Ошибка")
 
 
     def test_available_pages(self):
@@ -73,15 +105,13 @@ class StaticURLTests(TestCase):
 
 
 
-
-
-    def test_page_templates(self):
-        # Тест, шаблон с данным именем используется при рендеренге.
-        for page, template in StaticURLTests.page_urls.items():
-            with self.subTest():
-                response = self.authorized_client.get(page)
-                self.assertTemplateUsed(response, template,
-                                        "{} данный шаблон не работает".format(template))
+    # def test_page_templates(self):
+    #     # Тест, шаблон с данным именем используется при рендеренге.
+    #     for page, template in StaticURLTests.page_urls.items():
+    #         with self.subTest():
+    #             response = self.authorized_client.get(page)
+    #             self.assertTemplateUsed(response, template,
+    #                                     "{} данный шаблон не работает".format(template))
 #
 #     # Редирект
 #     # def test_static_new_page_redirect(self):
