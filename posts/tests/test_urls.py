@@ -11,109 +11,134 @@ class StaticURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = get_user_model().objects.create_user(username="dima")
-        Group.objects.create(
-            title="Название группы",
-            slug="test-slug",
-            description="тестовый текст"
-        )
-        cls.group = Group.objects.get(id=1)
 
-        Post.objects.create(
-            text="Тестовый текст",
-            author=cls.user,
+        cls.user1 = User.objects.create(
+            username="leo",
+            first_name="leo",
+            last_name="abramov"
+        )
+        cls.user2 = User.objects.create(
+            username="alex",
+            first_name="alex",
+            last_name="abramov"
+        )
+        cls.guest_client = Client()
+        cls.creator_user = Client()
+        cls.creator_user.force_login(cls.user1)
+        cls.authorized_user = Client()
+        cls.authorized_user.force_login(cls.user2)
+
+        cls.group = Group.objects.create(
+            title="Заголовок группы",
+            slug="test-slug",
+            description="Тестовый текст группы"
+        )
+
+        cls.post = Post.objects.create(
+            text="Текст Post",
+            author=cls.user1,
             group=cls.group
         )
-        cls.post = Post.objects.get(id=1)
 
         site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
         site.save()
 
         cls.flat_about = FlatPage.objects.create(
-            url=reverse('about-author'),
-            title='about me',
-            content='<b>some content</b>')
-
-        cls.flat_spec = FlatPage.objects.create(
-            url=reverse('terms'),
-            title='about me',
-            content='<b>some content</b>'
+            url=reverse("about"),
+            title="about me",
+            content="<b>some content</b>"
         )
-        cls.flat_about.sites.add(site)
-        cls.flat_spec.sites.add(site)
 
-        cls.page_urls = {
-            "/": "index.html",
-            "/new/": "new.html",
-            "/group/{}/".format(StaticURLTests.group.slug): "group.html",
-            "/{}/".format(str(StaticURLTests.user)): "profile.html",
-            "/{}/{}/".format(str(StaticURLTests.user), StaticURLTests.post.id): "post.html",
-            # "/{}/{}/edit".format(str(StaticURLTests.user), StaticURLTests.post.id): "post_new.html",
+        cls.flat_terms = FlatPage.objects.create(
+            url=reverse("terms"),
+            title="about terms",
+            content="some contet"
+        )
+
+        cls.flat_about.sites.add(site)
+        cls.flat_terms.sites.add(site)
+
+        cls.list_pages = {
+            reverse("index"): "index.html",
+            reverse("new_post"): "new.html",
+            reverse("group_posts", kwargs={"slug": cls.group.slug}): "group.html",
+            reverse("profile", kwargs={"username": cls.user1.username}): "profile.html",
+            reverse("post", kwargs={"username": cls.user1.username, "post_id": cls.post.id}): "post.html",
             reverse("about"): "flatpages/default.html",
-            reverse("terms"): "flatpages/default.html",
-            # "/about-spec/": "flatpages/default.html"
+            reverse("terms"): "flatpages/default.html"
         }
 
-
-
-
-
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(username="Alex")
-        self.guest_client = Client()
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-
-        # site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
-        # site.save()
-        #
-        # self.flat_about = FlatPage.objects.create(
-        #     url=reverse('about-author'),
-        #     title='about me',
-        #     content='<b>some content</b>')
-        #
-        # self.flat_spec = FlatPage.objects.create(
-        #     url=reverse('terms'),
-        #     title='about me',
-        #     content='<b>some content</b>'
-        # )
-        # self.flat_about.sites.add(site)
-        # self.flat_spec.sites.add(site)
-
-    # def test_flat_pages_response(self):
-    #     """Проверяем доступность статических страниц"""
-    #     for url in (reverse('about-author'), reverse('about-spec')):
-    #         with self.subTest(url=url):
-    #             response = self.guest_client.get(url)
-    #             self.assertEqual(response.status_code, 200)
-    #     response = self.guest_client.get(self.flat_about.url)
-    #     self.assertEqual(response.status_code, 200, "Ошибка")
-
-
-    def test_available_pages(self):
-        # Тест доступности страниц для авторизованного пользователя.
-        for page, template in StaticURLTests.page_urls.items():
-            response = self.authorized_client.get(page)
-            self.assertEqual(response.status_code, 200,
-                             "Зарегистрированный пользователь, не смог войти.")
-
-        for page, template in StaticURLTests.page_urls.items():
-            # Тест доступности страниц для неавторизованного пользователя.
+    # Проверки страниц код 200
+    def test_other_pages_guest_client_status_code_200(self):
+        for page, template in self.list_pages.items():
             response = self.guest_client.get(page)
             self.assertEqual(response.status_code, 200,
-                             "Незарегистрированный пользователь, не смог войти.")
+                             f"Страница {page} не отвечает")
 
+    def test_other_pages_authorized_client_status_code_200(self):
+        for page, template in self.list_pages.items():
+            response = self.guest_client.get(page)
+            self.assertEqual(response.status_code, 200,
+                             f"Страница {page} не отвечает")
 
+    # Проверка шаблонов
+    def test_other_pages_guest_client_templates(self):
+        for page, template in self.list_pages.items():
+            response = self.guest_client.get(page)
+            self.assertTemplateUsed(response, template,
+                                    f"{page} шаблон {template} не работает")
 
-    # def test_page_templates(self):
-    #     # Тест, шаблон с данным именем используется при рендеренге.
-    #     for page, template in StaticURLTests.page_urls.items():
-    #         with self.subTest():
-    #             response = self.authorized_client.get(page)
-    #             self.assertTemplateUsed(response, template,
-    #                                     "{} данный шаблон не работает".format(template))
-#
-#     # Редирект
-#     # def test_static_new_page_redirect(self):
-#     #     response = self.guest_client.get('/new/', follow=True)
-#     #     self.assertRedirects(response, '/new/?next=/index/')
+    def test_other_pages_authorized_user_templates(self):
+        for page, template in self.list_pages.items():
+            response = self.authorized_user.get(page)
+            self.assertTemplateUsed(response, template,
+                                    f"{page} шаблон {template} не работает")
+
+    # Проверки для страницы post_edit(post_new.html)
+    def test_post_edit_guest_client_200(self):
+        response = self.guest_client.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}), follow=True)
+        self.assertEqual(response.status_code, 200,
+                         "post_edit пользователь гость не может зайти.")
+
+    def test_post_edit_authorized_user_200(self):
+        response = self.authorized_user.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}), follow=True)
+        self.assertEqual(response.status_code, 200,
+                         "post_edit авторизованный пользователь не может зайти.")
+
+    def test_post_edit_creator_user_200(self):
+        response = self.creator_user.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}), follow=True)
+        self.assertEqual(response.status_code, 200,
+                         "post_edit неавторизованный пользователь не может зайти.")
+
+    def test_post_edit_template(self):
+        response = self.creator_user.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}))
+        self.assertTemplateUsed(response, "post_new.html",
+                                "post_edit не возвращает post_new.html")
+
+    def test_post_edit_authorized_user_redirect(self):
+        response = self.authorized_user.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}))
+        self.assertRedirects(response,
+                             f"/{self.user1.username}/{self.post.id}/")
+
+    def test_post_edit_guest_client_redirect(self):
+        response = self.guest_client.get(
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": 1}))
+        self.assertRedirects(response,
+                             f"/{self.user1.username}/{self.post.id}/")

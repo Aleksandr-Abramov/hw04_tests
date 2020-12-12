@@ -1,191 +1,204 @@
 from django.test import TestCase, Client
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django import forms
+from django.contrib.flatpages.models import FlatPage
+from django.contrib.sites.models import Site
 
-from ..models import Post, Group
+from ..models import Post, Group, User
 
 
 class ViewPageContextTest(TestCase):
 
-    def test_context(self):
-        self.user = get_user_model().objects.create_user(username="Sasha")
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        group = Group.objects.create(
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.user1 = User.objects.create(
+            username="leo",
+            first_name="leo",
+            last_name="abramov"
+        )
+
+        cls.user2 = User.objects.create(
+            username="alex",
+            first_name="alex",
+            last_name="abramov"
+        )
+
+        cls.creator_user = Client()
+        cls.creator_user.force_login(cls.user1)
+
+        cls.group = Group.objects.create(
+            title="Заголовок группы",
+            slug="slug-test",
+            description="Описание группы"
+        )
+
+        cls.post = Post.objects.create(
+            text="Текст поста.",
+            group=cls.group,
+            author=cls.user1
+        )
+
+        site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
+        site.save()
+
+        cls.flat_about = FlatPage.objects.create(
+            url=reverse("about"),
+            title="flat_about title",
+            content="flat content"
+        )
+
+        cls.flat_terms = FlatPage.objects.create(
+            url=reverse("terms"),
+            title="flat_term title",
+            content="flat content"
+        )
+
+        cls.flat_about.sites.add(site)
+        cls.flat_terms.sites.add(site)
+
+        cls.page_urls = {
+            reverse("index"): "index.html",
+            reverse("group_posts", kwargs={"slug": cls.group.slug}): "group.html",
+            reverse("new_post"): "new.html",
+            reverse("about"): "flatpages/default.html",
+            reverse("terms"): "flatpages/default.html"
+        }
+
+    # Тест шаблонов
+    def test_templates_all_pages(self):
+        for page, templates in self.page_urls.items():
+            response = self.creator_user.get(page)
+            self.assertTemplateUsed(response, templates,
+                                    f"{page} не возвращает шаблон {templates}")
+
+    # Тест контент index.html
+    def test_contest_index_page(self):
+        response = self.creator_user.get(reverse("index"))
+        self.assertEqual(response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(response.context.get("page")[0].author.username, self.post.author.username)
+        self.assertEqual(response.context.get("page")[0].group.title, self.post.group.title)
+
+    # Тест контент group.html
+    def test_context_group_page(self):
+        response = self.creator_user.get(reverse("group_posts", args=[self.group.slug]))
+        self.assertEqual(response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(response.context.get("page")[0].group, self.post.group)
+        self.assertEqual(response.context.get("page")[0].author, self.post.author)
+        self.assertEqual(response.context.get("group").title, self.group.title)
+        self.assertEqual(response.context.get("group").slug, self.group.slug)
+        self.assertEqual(response.context.get("group").description, self.group.description)
+
+    # Тесе контент new.html
+    def test_content_new(self):
+        response = self.creator_user.get(reverse("new_post"))
+        self.assertIsInstance(response.context.get("form").fields.get("text"), forms.fields.CharField)
+        self.assertIsInstance(response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
+
+    # Тест кнотекст profile.html
+    def test_content_profile(self):
+        response = self.creator_user.get(reverse("profile", kwargs={"username": self.user1.username}))
+        self.assertEqual(response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(response.context.get("page")[0].author, self.post.author)
+        self.assertEqual(response.context.get("page")[0].group, self.post.group)
+        self.assertEqual(response.context.get("author_posts").username, self.user1.username)
+
+    # Тест контекст post.html
+    def test_context_post(self):
+        response = self.creator_user.get(
+            reverse("post", kwargs={"username": self.user1.username, "post_id": self.post.id}))
+        self.assertEqual(response.context.get("author_posts").username, self.user1.username)
+        self.assertEqual(response.context.get("number_post").text, self.post.text)
+        self.assertEqual(response.context.get("number_post").author, self.post.author)
+        self.assertEqual(response.context.get("number_post").group, self.post.group)
+
+    # Тест контекст post_new.html
+    def test_context_post_edit(self):
+        response = self.creator_user.get(
+            reverse("post_edit", kwargs={"username": self.user1.username, "post_id": self.post.id}))
+        self.assertIsInstance(response.context.get("form").fields.get("text"), forms.fields.CharField)
+        self.assertIsInstance(response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
+
+    # Тест контекст flatpages default.html
+    def test_flat_about(self):
+        response = self.creator_user.get(reverse("about"))
+        self.assertEqual(response.context.get("flatpage").url, self.flat_about.url)
+        self.assertEqual(response.context.get("flatpage").title, self.flat_about.title)
+        self.assertEqual(response.context.get("flatpage").content, self.flat_about.content)
+
+    # Тест контекст flatpages default.html
+    def test_flat_terms(self):
+        response = self.creator_user.get(reverse("terms"))
+        self.assertEqual(response.context.get("flatpage").url, self.flat_terms.url)
+        self.assertEqual(response.context.get("flatpage").title, self.flat_terms.title)
+        self.assertEqual(response.context.get("flatpage").content, self.flat_terms.content)
+
+    # Тест создания поста index.html
+    def test_create_content_index(self):
+        new_post = Post.objects.create(
+            text="тестовый текст",
+            author=self.user1,
+            group=self.group
+        )
+        response = self.creator_user.get(reverse("index"))
+        self.assertContains(response, new_post)
+
+    # Тест создания поста group.html
+    def test_create_content_group(self):
+        new_post = Post.objects.create(
+            text="тестовый текст",
+            author=self.user1,
+            group=self.group
+        )
+        response = self.creator_user.get(reverse("group_posts", args=["slug-test"]))
+        self.assertContains(response, new_post)
+
+
+class PaginatorViewsTest(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        user = User.objects.create_user(username="Alex")
+        Group.objects.create(
             title="Название группы",
             slug="test-slug",
             description="тестовый текст"
         )
+        cls.group = Group.objects.get(id=1)
+        for i in range(13):
+            Post.objects.create(
+                text="Тестовый текст" + f" {i}",
+                author=user,
+                group=cls.group
+            )
 
-        Post.objects.create(
-            text="Тестовый текст",
-            author=self.user,
-            group=group
-        )
-        post = Post.objects.get(id=1)
-        response = self.authorized_client.get(reverse("profile", kwargs={"username": "Sasha"}))
+    def setUp(self):
+        self.guest_client = Client()
 
-        print(response.context.get("page")[0].text)
-        # post_title = response.context.get("page")[0].text
-        # response = self.authorized_client.get(reverse("index"))
+    # Тест пагинатор, записей на 1 странице  10
+    def test_index_first_page_contains_ten_records(self):
+        response = self.guest_client.get(reverse("index"))
+        self.assertEqual(len(response.context.get("page").object_list), 10,
+                         "Количество записей не равняется 10")
 
+    # Тест пагинатор, записей на 2 странице  3
+    def test_index_second_page_contains_three_records(self):
+        response = self.guest_client.get((reverse("index") + "?page=2"))
+        self.assertEqual(len(response.context.get("page").object_list), 3,
+                         "Количество записей не равняется 3")
 
+    # Тест пагинатор, записей на 1 странице  10
+    def test_group_first_page_contains_ten_records(self):
+        response = self.guest_client.get(reverse(
+            "group_posts",
+            kwargs={"slug": "test-slug"}))
+        self.assertEqual(len(response.context.get("page").object_list), 10)
 
-
-# class ViewsTemplatesTest(TestCase):
-#
-#     @classmethod
-#     def setUpClass(cls):
-#         super().setUpClass()
-#         user = get_user_model().objects.create_user(username="Alex")
-#         group = Group.objects.create(
-#             title="Название группы",
-#             slug="test-slug",
-#             description="тестовый текст"
-#         )
-#
-#         Post.objects.create(
-#             text="Тестовый текст",
-#             author=user,
-#             group=group
-#         )
-#
-#         cls.page_urls = {
-#             reverse("index"): "index.html",
-#             reverse("new_post"): "new.html",
-#             reverse("group_posts", kwargs={"slug": "test-slug"}): "group.html"
-#         }
-#
-#     def setUp(self):
-#         self.guest_user = get_user_model().objects.create_user(username="Sasha")
-#         self.authorized_client = Client()
-#         self.authorized_client.force_login(self.guest_user)
-#
-#     def test_page_correct_templates(self):
-#         for page, template in ViewsTemplatesTest.page_urls.items():
-#             response = self.authorized_client.get(page)
-#             self.assertTemplateUsed(
-#                 response,
-#                 template,
-#                 "Не использует шаблон {} для отоброжения ответа.".format(template))
-
-
-# class ViewPageContextTest(TestCase):
-#
-#     @classmethod
-#     def setUpClass(cls):
-#         super().setUpClass()
-#         user = get_user_model().objects.create_user(username="Alex")
-#         Group.objects.create(
-#             title="Название группы",
-#             slug="test-slug",
-#             description="тестовый текст"
-#         )
-#         cls.group = Group.objects.get(id=1)
-#         Post.objects.create(
-#             text="Тестовый текст",
-#             author=user,
-#             group=cls.group
-#         )
-#
-#         cls.post = Post.objects.get(id=1)
-#
-#     def setUp(self):
-#         self.guest_user = get_user_model().objects.create_user(username="Sasha")
-#         self.authorized_client = Client()
-#         self.authorized_client.force_login(self.guest_user)
-#
-#     def test_index_page_correct_context(self):
-#         response = self.authorized_client.get(reverse("index"))
-#         post_title = response.context.get("page")[0].text
-#         post_author = response.context.get("page")[0].author.username
-#         post_group = response.context.get("page")[0].group.title
-#
-#         self.assertEqual(post_title, "Тестовый текст")
-#         self.assertEqual(post_author, "Alex")
-#         self.assertEqual(post_group, "Название группы")
-#
-#     def test_group_posts_page_correct_context(self):
-#         response = self.authorized_client.get(reverse(
-#             "group_posts",
-#             kwargs={"slug": "test-slug"}))
-#         group_title = response.context.get("group").title
-#         group_slug = response.context.get("group").slug
-#         group_description = response.context.get("group").description
-#
-#         self.assertEqual(group_title, "Название группы")
-#         self.assertEqual(group_slug, "test-slug")
-#         self.assertEqual(group_description, "тестовый текст")
-#
-#     def test_form_page_correct_context(self):
-#         field_forms = {
-#             "text": forms.fields.CharField,
-#             "group": forms.fields.ChoiceField
-#         }
-#         response = self.authorized_client.get(reverse("new_post"))
-#         for value, expected, in field_forms.items():
-#             form_field = response.context.get("form").fields.get(value)
-#             self.assertIsInstance(form_field, expected,
-#                                   "form.field не того класса.")
-#
-#     def test_index_page_create_post_correct_context(self):
-#         new_post = Post.objects.create(
-#             text="Текст для поста",
-#             author=self.guest_user,
-#             group=ViewPageContextTest.group)
-#         response = self.authorized_client.get(reverse("index"))
-#         self.assertContains(response, new_post)
-#
-#     def test_group_posts_page_create_post_correct_context(self):
-#         new_post = Post.objects.create(
-#             text="Текст для поста",
-#             author=self.guest_user,
-#             group=ViewPageContextTest.group)
-#         response = self.authorized_client.get(reverse("group_posts", kwargs={"slug": "test-slug"}))
-#         self.assertContains(response, new_post)
-
-
-# class PaginatorViewsTest(TestCase):
-#
-#     @classmethod
-#     def setUpClass(cls):
-#         super().setUpClass()
-#         user = get_user_model().objects.create_user(username="Alex")
-#         Group.objects.create(
-#             title="Название группы",
-#             slug="test-slug",
-#             description="тестовый текст"
-#         )
-#         cls.group = Group.objects.get(id=1)
-#         for i in range(13):
-#             Post.objects.create(
-#                 text="Тестовый текст" + f" {i}",
-#                 author=user,
-#                 group=cls.group
-#             )
-#
-#     def setUp(self):
-#         self.guest_client = Client()
-#
-#     def test_index_first_page_contains_ten_records(self):
-#         response = self.guest_client.get(reverse("index"))
-#         self.assertEqual(len(response.context.get("page").object_list), 10,
-#                          "Количество записей не равняется 10")
-#
-#     def test_index_second_page_contains_three_records(self):
-#         response = self.guest_client.get((reverse("index") + "?page=2"))
-#         self.assertEqual(len(response.context.get("page").object_list), 3,
-#                          "Количество записей не равняется 3")
-#
-#     def test_group_first_page_contains_ten_records(self):
-#         response = self.guest_client.get(reverse(
-#             "group_posts",
-#             kwargs={"slug": "test-slug"}))
-#         self.assertEqual(len(response.context.get("page").object_list), 10)
-#
-#     def test_group_second_page_contains_three_records(self):
-#         response = self.guest_client.get(reverse(
-#             "group_posts",
-#             kwargs={"slug": "test-slug"}) + "?page=2")
-#         self.assertEqual(len(response.context.get("page").object_list), 3)
+    # Тест пагинатор, записей на 2 странице  3
+    def test_group_second_page_contains_three_records(self):
+        response = self.guest_client.get(reverse(
+            "group_posts",
+            kwargs={"slug": "test-slug"}) + "?page=2")
+        self.assertEqual(len(response.context.get("page").object_list), 3)

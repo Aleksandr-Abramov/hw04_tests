@@ -80,7 +80,7 @@ def post_view(request, username, post_id):
         "number_post": number_post
     }
 
-    return render(request, 'post.html', context)
+    return render(request, "post.html", context)
 
 
 def post_edit(request, username, post_id):
