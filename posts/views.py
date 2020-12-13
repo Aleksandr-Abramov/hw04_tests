@@ -15,7 +15,8 @@ def index(request):
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     context = {
-        "page": page
+        "page": page,
+        "paginator": paginator
     }
     return render(request, "index.html", context)
 
@@ -31,7 +32,8 @@ def group_posts(request, slug):
     page = paginator.get_page(page_number)
     context = {
         "group": group,
-        "page": page
+        "page": page,
+        "paginator": paginator
     }
     return render(request, "group.html", context)
 
@@ -66,7 +68,8 @@ def profile(request, username):
     page = paginator.get_page(page_number)
     context = {
         "page": page,
-        "author_posts": author_posts
+        "author_posts": author_posts,
+        "paginator": paginator
     }
     return render(request, 'profile.html', context)
 
@@ -93,7 +96,8 @@ def post_edit(request, username, post_id):
         form = PostForm(instance=number_post)
         context = {
             "form": form,
-            "is_edit": True
+            "is_edit": True,
+            "post": Post.objects.get(id=post_id),
         }
         return render(request, "post_new.html", context)
 
@@ -101,10 +105,12 @@ def post_edit(request, username, post_id):
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
-        post.save()
-        return redirect("index")
+        form.save()
+        return redirect('post', username, post_id)
     context = {
         "form": form,
-        "is_edit": True
+        "is_edit": True,
+        "post": Post.objects.get(id=post_id),
+        "number_post": number_post
     }
     return render(request, "post_new.html", context)

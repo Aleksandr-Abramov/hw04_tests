@@ -1,6 +1,5 @@
 from django.test import TestCase, Client
 from ..models import Group, Post, User
-from django.contrib.auth import get_user_model
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.sites.models import Site
 from django.urls import reverse
@@ -68,8 +67,8 @@ class StaticURLTests(TestCase):
             reverse("terms"): "flatpages/default.html"
         }
 
-    # Проверки страниц код 200
     def test_other_pages_guest_client_status_code_200(self):
+        """Проверки страниц код 200"""
         for page, template in self.list_pages.items():
             response = self.guest_client.get(page)
             self.assertEqual(response.status_code, 200,
@@ -81,8 +80,8 @@ class StaticURLTests(TestCase):
             self.assertEqual(response.status_code, 200,
                              f"Страница {page} не отвечает")
 
-    # Проверка шаблонов
     def test_other_pages_guest_client_templates(self):
+        """Проверка шаблонов"""
         for page, template in self.list_pages.items():
             response = self.guest_client.get(page)
             self.assertTemplateUsed(response, template,
@@ -94,8 +93,8 @@ class StaticURLTests(TestCase):
             self.assertTemplateUsed(response, template,
                                     f"{page} шаблон {template} не работает")
 
-    # Проверки для страницы post_edit(post_new.html)
     def test_post_edit_guest_client_200(self):
+        """Проверки для страницы post_edit(post_new.html)"""
         response = self.guest_client.get(
             reverse("post_edit",
                     kwargs={"username": self.user1.username,

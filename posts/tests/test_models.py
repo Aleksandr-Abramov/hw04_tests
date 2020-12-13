@@ -16,8 +16,8 @@ class TestModelGroup(TestCase):
         cls.group = Group.objects.get(id=1)
 
     def test_field_group_verbose_name(self):
-        # Тест полей модели Group, на получение имени (verbose_name)
-        group_field = TestModelGroup.group
+        """Тест полей модели Group, на получение имени (verbose_name)"""
+        group_field = self.group
 
         field_verbose = {
             "title": "Название группы:",
@@ -33,8 +33,8 @@ class TestModelGroup(TestCase):
                     "verbose-name с ошибкой.")
 
     def test_field_group_help_text(self):
-        # Тест полей модели Group, на получение вспапогательного текста (help_text)
-        group_field = TestModelGroup.group
+        """Тест полей модели Group, на получение вспапогательного текста (help_text)"""
+        group_field = self.group
 
         field_help_text = {
             "title": "Введите название группы",
@@ -50,9 +50,9 @@ class TestModelGroup(TestCase):
                                  "help-text с ошибкой.")
 
     def test_group_str_method(self):
-        # Тест метода __str__(), модели Group
-        value = TestModelGroup.group.__str__()
-        expected = TestModelGroup.group.title
+        """Тест метода __str__(), модели Group"""
+        value = self.group.__str__()
+        expected = self.group.title
         self.assertEqual(value, expected, "__str__() не работает.")
 
 
@@ -76,8 +76,8 @@ class TestModelPost(TestCase):
         cls.post = Post.objects.get(id=1)
 
     def test_field_group_verbose_name(self):
-        # Тест полей модели Group, на получение имени (verbose_name)
-        post_fields = TestModelPost.post
+        """Тест полей модели Group, на получение имени (verbose_name)"""
+        post_fields = self.post
         field_verbose = {
             "text": "Текст поста",
             "author": "Автор поста:",
@@ -91,8 +91,8 @@ class TestModelPost(TestCase):
                                  "post.verbose_name c ошибкой.")
 
     def test_field_group_help_text(self):
-        # Тест полей модели Post, на получение вспапогательного текста (help_text)
-        post_fields = TestModelPost.post
+        """Тест полей модели Post, на получение вспапогательного текста (help_text)"""
+        post_fields = self.post
 
         field_verbose = {
             "text": "Поле для хранения произвольного текста",
@@ -107,7 +107,7 @@ class TestModelPost(TestCase):
                                  "post.help_text с ошибкой.")
 
     def test_post_str_method(self):
-        # Тест метода __str__(), модели Post
+        """Тест метода __str__(), модели Post"""
         value = TestModelGroup.group.__str__()
         expected = TestModelGroup.group.title
         self.assertEqual(value, expected, "__str__() не работает.")
