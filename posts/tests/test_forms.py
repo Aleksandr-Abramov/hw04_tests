@@ -33,10 +33,19 @@ class PostFormTest(TestCase):
             "text": "Тестовый текст",
         }
         number_posts = Post.objects.count()
-        response = self.authorized_user.post(reverse("new_post"), data=from_data, follow=True)
-        self.assertEqual(response.status_code, 200, "Страница new.html не отвечает")
-        self.assertEqual(Post.objects.count(), number_posts + 1, "Количество постов меньше 1")
-        self.assertRedirects(response, "/")
+        response = self.authorized_user.post(
+            reverse("new_post"),
+            data=from_data,
+            follow=True)
+        self.assertEqual(
+            response.status_code,
+            200,
+            "Страница new.html не отвечает")
+        self.assertEqual(
+            Post.objects.count(),
+            number_posts + 1,
+            "Количество постов меньше 1")
+        self.assertRedirects(response, reverse("index"))
 
     def test_post_edit_create_post_end_redirect(self):
         """Тест соханения данных и redirect для post_edit"""
@@ -46,7 +55,20 @@ class PostFormTest(TestCase):
         }
         number_posts = Post.objects.count()
         response = self.authorized_user.post(
-            reverse("post_edit", args=[self.post.author, self.post.id]), data=from_data, follow=True)
-        self.assertEqual(response.status_code, 200, "Страница new.html не отвечает")
-        self.assertEqual(Post.objects.count(), number_posts + 1, "Количество постов меньше 1")
-        self.assertRedirects(response, reverse("post", args=[self.post.author, self.post.id]))
+            reverse(
+            "post_edit",
+            args=[self.post.author, self.post.id]),
+            data=from_data,
+            follow=True)
+        self.assertEqual(
+            response.status_code,
+            200,
+            "Страница new.html не отвечает")
+        # Максим, здравствуйте. Эта проверка из теории практикума. Так советует наставник.
+        self.assertEqual(
+            Post.objects.count(),
+            number_posts + 1,
+            "Количество постов меньше 1")
+        self.assertRedirects(
+            response,
+            reverse("post", args=[self.post.author, self.post.id]))

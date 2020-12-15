@@ -60,9 +60,12 @@ class StaticURLTests(TestCase):
         cls.list_pages = {
             reverse("index"): "index.html",
             reverse("new_post"): "new.html",
-            reverse("group_posts", kwargs={"slug": cls.group.slug}): "group.html",
-            reverse("profile", kwargs={"username": cls.user1.username}): "profile.html",
-            reverse("post", kwargs={"username": cls.user1.username, "post_id": cls.post.id}): "post.html",
+            reverse("group_posts",
+                    kwargs={"slug": cls.group.slug}): "group.html",
+            reverse("profile",
+                    kwargs={"username": cls.user1.username}): "profile.html",
+            reverse("post",
+                    kwargs={"username": cls.user1.username, "post_id": cls.post.id}): "post.html",
             reverse("about"): "flatpages/default.html",
             reverse("terms"): "flatpages/default.html"
         }
@@ -131,13 +134,18 @@ class StaticURLTests(TestCase):
             reverse("post_edit",
                     kwargs={"username": self.user1.username,
                             "post_id": 1}))
-        self.assertRedirects(response,
-                             f"/{self.user1.username}/{self.post.id}/")
+        self.assertRedirects(
+            response,
+            f"/{self.user1.username}/{self.post.id}/")
 
     def test_post_edit_guest_client_redirect(self):
         response = self.guest_client.get(
-            reverse("post_edit",
+            reverse(
+                "post_edit",
+                kwargs={"username": self.user1.username,
+                        "post_id": 1}))
+        self.assertRedirects(
+            response,
+            reverse("post",
                     kwargs={"username": self.user1.username,
-                            "post_id": 1}))
-        self.assertRedirects(response,
-                             f"/{self.user1.username}/{self.post.id}/")
+                            "post_id": self.post.id}))

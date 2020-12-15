@@ -10,7 +10,7 @@ from .models import Post, Group, User
 def index(request):
 
     """Главная страницы"""
-    post_list = Post.objects.select_related("group").order_by("-pub_date")
+    post_list = Post.objects.select_related("group")
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
@@ -22,11 +22,12 @@ def index(request):
 
 
 def group_posts(request, slug):
+
     """Страница автора"""
     group = get_object_or_404(Group, slug=slug)
     # post_list = Post.objects.select_related("group").order_by("-pub_date")
     author = Group.objects.get(slug=slug)
-    post_list = author.posts.all().order_by("-pub_date")
+    post_list = author.posts.all()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)

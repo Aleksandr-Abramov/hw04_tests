@@ -9,7 +9,7 @@ urlpatterns = [
 
     #  если нужного шаблона для /auth не нашлось в файле users.urls —
     #  ищем совпадения в файле django.contrib.auth.urls
-    path('auth/', include('users.urls')),
+    path("auth/", include("users.urls")),
     path("auth/", include("django.contrib.auth.urls")),
 
     #  раздел администратора
@@ -17,7 +17,7 @@ urlpatterns = [
 
     #  обработчик для главной страницы ищем в urls.py приложения posts
 
-    path('about-us/', views.flatpage, {'url': '/about-us/'}, name='about'),
-    path('terms/', views.flatpage, {'url': '/terms/'}, name='terms'),
+    path("about-us/", views.flatpage, {"url": "/about-us/"}, name="about"),
+    path("terms/", views.flatpage, {"url": "/terms/"}, name="terms"),
     path("", include("posts.urls")),
 ]

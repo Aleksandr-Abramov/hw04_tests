@@ -13,7 +13,7 @@ class TestModelGroup(TestCase):
             slug="test-slug",
             description="тестовый текст"
         )
-        cls.group = Group.objects.get(id=1)
+        cls.group = Group.objects.first()
 
     def test_field_group_verbose_name(self):
         """Тест полей модели Group, на получение имени (verbose_name)"""
@@ -45,9 +45,10 @@ class TestModelGroup(TestCase):
 
         for value, expected in field_help_text.items():
             with self.subTest(value=value):
-                self.assertEqual(group_field._meta.get_field(value).help_text,
-                                 expected,
-                                 "help-text с ошибкой.")
+                self.assertEqual(
+                    group_field._meta.get_field(value).help_text,
+                    expected,
+                    "help-text с ошибкой.")
 
     def test_group_str_method(self):
         """Тест метода __str__(), модели Group"""
@@ -86,9 +87,10 @@ class TestModelPost(TestCase):
 
         for value, expected in field_verbose.items():
             with self.subTest(value=value):
-                self.assertEqual(post_fields._meta.get_field(value).verbose_name,
-                                 expected,
-                                 "post.verbose_name c ошибкой.")
+                self.assertEqual(
+                    post_fields._meta.get_field(value).verbose_name,
+                    expected,
+                    "post.verbose_name c ошибкой.")
 
     def test_field_group_help_text(self):
         """Тест полей модели Post, на получение вспапогательного текста (help_text)"""
@@ -102,9 +104,10 @@ class TestModelPost(TestCase):
 
         for value, expected in field_verbose.items():
             with self.subTest(value=value):
-                self.assertEqual(post_fields._meta.get_field(value).help_text,
-                                 expected,
-                                 "post.help_text с ошибкой.")
+                self.assertEqual(
+                    post_fields._meta.get_field(value).help_text,
+                    expected,
+                    "post.help_text с ошибкой.")
 
     def test_post_str_method(self):
         """Тест метода __str__(), модели Post"""

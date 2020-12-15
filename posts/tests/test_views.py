@@ -76,63 +76,101 @@ class ViewPageContextTest(TestCase):
     def test_contest_index_page(self):
         """ Тест контент index.html"""
         response = self.creator_user.get(reverse("index"))
-        self.assertEqual(response.context.get("page")[0].text, self.post.text)
-        self.assertEqual(response.context.get("page")[0].author.username, self.post.author.username)
-        self.assertEqual(response.context.get("page")[0].group.title, self.post.group.title)
+        self.assertEqual(
+            response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(
+            response.context.get("page")[0].author.username, self.post.author.username)
+        self.assertEqual(
+            response.context.get("page")[0].group.title, self.post.group.title)
 
     def test_context_group_page(self):
         """ Тест контент group.html"""
         response = self.creator_user.get(reverse("group_posts", args=[self.group.slug]))
-        self.assertEqual(response.context.get("page")[0].text, self.post.text)
-        self.assertEqual(response.context.get("page")[0].group, self.post.group)
-        self.assertEqual(response.context.get("page")[0].author, self.post.author)
-        self.assertEqual(response.context.get("group").title, self.group.title)
-        self.assertEqual(response.context.get("group").slug, self.group.slug)
-        self.assertEqual(response.context.get("group").description, self.group.description)
+        self.assertEqual(
+            response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(
+            response.context.get("page")[0].group, self.post.group)
+        self.assertEqual(
+            response.context.get("page")[0].author, self.post.author)
+        self.assertEqual(
+            response.context.get("group").title, self.group.title)
+        self.assertEqual(
+            response.context.get("group").slug, self.group.slug)
+        self.assertEqual(
+            response.context.get("group").description, self.group.description)
 
     def test_content_new(self):
         """Тесе контент new.html"""
         response = self.creator_user.get(reverse("new_post"))
-        self.assertIsInstance(response.context.get("form").fields.get("text"), forms.fields.CharField)
-        self.assertIsInstance(response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
+        self.assertIsInstance(
+            response.context.get("form").fields.get("text"), forms.fields.CharField)
+        self.assertIsInstance(
+            response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
 
     def test_content_profile(self):
         """Тест кнотекст profile.html"""
         response = self.creator_user.get(reverse("profile", kwargs={"username": self.user1.username}))
-        self.assertEqual(response.context.get("page")[0].text, self.post.text)
-        self.assertEqual(response.context.get("page")[0].author, self.post.author)
-        self.assertEqual(response.context.get("page")[0].group, self.post.group)
-        self.assertEqual(response.context.get("author_posts").username, self.user1.username)
+        self.assertEqual(
+            response.context.get("page")[0].text, self.post.text)
+        self.assertEqual(
+            response.context.get("page")[0].author, self.post.author)
+        self.assertEqual(
+            response.context.get("page")[0].group, self.post.group)
+        self.assertEqual(
+            response.context.get("author_posts").username, self.user1.username)
 
     def test_context_post(self):
         """Тест контекст post.html"""
         response = self.creator_user.get(
-            reverse("post", kwargs={"username": self.user1.username, "post_id": self.post.id}))
-        self.assertEqual(response.context.get("author_posts").username, self.user1.username)
-        self.assertEqual(response.context.get("number_post").text, self.post.text)
-        self.assertEqual(response.context.get("number_post").author, self.post.author)
-        self.assertEqual(response.context.get("number_post").group, self.post.group)
+            reverse("post",
+                    kwargs={
+                        "username": self.user1.username,
+                        "post_id": self.post.id}))
+        self.assertEqual(
+            response.context.get("author_posts").username, self.user1.username)
+        self.assertEqual(
+            response.context.get("number_post").text, self.post.text)
+        self.assertEqual(
+            response.context.get("number_post").author, self.post.author)
+        self.assertEqual(
+            response.context.get("number_post").group, self.post.group)
 
     def test_context_post_edit(self):
         """Тест контекст post_new.html"""
         response = self.creator_user.get(
-            reverse("post_edit", kwargs={"username": self.user1.username, "post_id": self.post.id}))
-        self.assertIsInstance(response.context.get("form").fields.get("text"), forms.fields.CharField)
-        self.assertIsInstance(response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
+            reverse("post_edit",
+                    kwargs={"username": self.user1.username,
+                            "post_id": self.post.id}))
+        self.assertIsInstance(
+            response.context.get("form").fields.get("text"), forms.fields.CharField)
+        self.assertIsInstance(
+            response.context.get("form").fields.get("group"), forms.fields.ChoiceField)
 
     def test_flat_about(self):
         """Тест контекст flatpages default.html"""
         response = self.creator_user.get(reverse("about"))
-        self.assertEqual(response.context.get("flatpage").url, self.flat_about.url)
-        self.assertEqual(response.context.get("flatpage").title, self.flat_about.title)
-        self.assertEqual(response.context.get("flatpage").content, self.flat_about.content)
+        self.assertEqual(
+            response.context.get("flatpage").url,
+            self.flat_about.url)
+        self.assertEqual(
+            response.context.get("flatpage").title,
+            self.flat_about.title)
+        self.assertEqual(
+            response.context.get("flatpage").content,
+            self.flat_about.content)
 
     def test_flat_terms(self):
         """Тест контекст flatpages default.html"""
         response = self.creator_user.get(reverse("terms"))
-        self.assertEqual(response.context.get("flatpage").url, self.flat_terms.url)
-        self.assertEqual(response.context.get("flatpage").title, self.flat_terms.title)
-        self.assertEqual(response.context.get("flatpage").content, self.flat_terms.content)
+        self.assertEqual(
+            response.context.get("flatpage").url,
+            self.flat_terms.url)
+        self.assertEqual(
+            response.context.get("flatpage").title,
+            self.flat_terms.title)
+        self.assertEqual(
+            response.context.get("flatpage").content,
+            self.flat_terms.content)
 
     def test_create_content_index(self):
         """Тест создания поста index.html"""
@@ -151,7 +189,8 @@ class ViewPageContextTest(TestCase):
             author=self.user1,
             group=self.group
         )
-        response = self.creator_user.get(reverse("group_posts", args=["slug-test"]))
+        response = self.creator_user.get(
+            reverse("group_posts", args=["slug-test"]))
         self.assertContains(response, new_post)
 
 
@@ -166,7 +205,7 @@ class PaginatorViewsTest(TestCase):
             slug="test-slug",
             description="тестовый текст"
         )
-        cls.group = Group.objects.get(id=1)
+        cls.group = Group.objects.first()
         for i in range(13):
             Post.objects.create(
                 text="Тестовый текст" + f" {i}",
