@@ -53,22 +53,20 @@ class PostFormTest(TestCase):
             "group": self.group.id,
             "text": "Тестовый текст",
         }
-        number_posts = Post.objects.count()
+
         response = self.authorized_user.post(
-            reverse(
-            "post_edit",
-            args=[self.post.author, self.post.id]),
-            data=from_data,
-            follow=True)
+            reverse("post_edit", args=[self.post.author, self.post.id]),
+            data=from_data, follow=True)
+
         self.assertEqual(
-            response.status_code,
-            200,
-            "Страница new.html не отвечает")
-        # Максим, здравствуйте. Эта проверка из теории практикума. Так советует наставник.
+            response.status_code, 200,
+            "Страница post_new.html не отвечает")
+
         self.assertEqual(
-            Post.objects.count(),
-            number_posts + 1,
-            "Количество постов меньше 1")
+            Post.objects.first().text,
+            from_data["text"],
+            "Пост не миняется.")
+
         self.assertRedirects(
             response,
             reverse("post", args=[self.post.author, self.post.id]))

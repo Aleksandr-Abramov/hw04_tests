@@ -129,11 +129,11 @@ class ViewPageContextTest(TestCase):
         self.assertEqual(
             response.context.get("author_posts").username, self.user1.username)
         self.assertEqual(
-            response.context.get("number_post").text, self.post.text)
+            response.context.get("post").text, self.post.text)
         self.assertEqual(
-            response.context.get("number_post").author, self.post.author)
+            response.context.get("post").author, self.post.author)
         self.assertEqual(
-            response.context.get("number_post").group, self.post.group)
+            response.context.get("post").group, self.post.group)
 
     def test_context_post_edit(self):
         """Тест контекст post_new.html"""
