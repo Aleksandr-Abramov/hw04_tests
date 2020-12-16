@@ -3,10 +3,11 @@
         <div class="h2">
             <!-- Имя автора -->
             {{ author_posts.get_full_name }}
+
         </div>
         <div class="h3 text-muted">
             <!-- username автора -->
-            {{ author_posts.email }}
+            {{ post.author.email }}
         </div>
     </div>
     <ul class="list-group list-group-flush">
@@ -19,7 +20,7 @@
         <li class="list-group-item">
             <div class="h6 text-muted">
                 <!--Количество записей -->
-                Записей: {{ author_posts.posts.count }}
+                Записей: {{ post.author.posts.count }}
             </div>
         </li>
     </ul>

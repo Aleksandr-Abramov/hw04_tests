@@ -76,12 +76,15 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
-
+    # Здорово, рецепт сработал! Но, переменную придется оставить,
+    # pytest не проходит. Работу не выслать на проверку.
     author_posts = User.objects.get(username=username)
-    number_post = Post.objects.get(id=post_id)
+    # number_post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, pk=post_id, author__username=username)
     context = {
         "author_posts": author_posts,
-        "number_post": number_post
+        # "number_post": number_post,
+        "post": post
     }
 
     return render(request, "post.html", context)
