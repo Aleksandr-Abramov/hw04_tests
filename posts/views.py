@@ -23,8 +23,6 @@ def index(request):
 def group_posts(request, slug):
     """Страница автора"""
     group = get_object_or_404(Group, slug=slug)
-    # posts = Post.objects.select_related("group").order_by("-pub_date")
-    # author = Group.objects.get(slug=slug)
     posts = group.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
@@ -59,8 +57,8 @@ def new_post(request):
 
 
 def profile(request, username):
+    # Профиль пользователя
     author_posts = get_object_or_404(User, username=username)
-    # author_posts = User.objects.get(username=username)
     posts = author_posts.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
@@ -75,7 +73,7 @@ def profile(request, username):
 
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    author_posts = post.author  # Все заработало, и pytest пропустил.)
+    author_posts = post.author
     context = {
         "author_posts": author_posts,
         "post": post
@@ -85,6 +83,7 @@ def post_view(request, username, post_id):
 
 
 def post_edit(request, username, post_id):
+    # Страница редактирования поста
     post = get_object_or_404(Post, id=post_id)
     if request.user.username != username:
         return redirect("post", username=username, post_id=post_id)
