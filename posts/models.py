@@ -47,6 +47,8 @@ class Post(models.Model):
         help_text="Автор."
     )
 
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+
     class Meta:
         ordering = ["-pub_date"]
 

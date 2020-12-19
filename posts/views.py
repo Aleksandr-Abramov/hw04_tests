@@ -43,7 +43,7 @@ def new_post(request):
         context = {"form": form}
         return render(request, "new.html", context)
 
-    form = PostForm(request.POST)
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
@@ -89,15 +89,15 @@ def post_edit(request, username, post_id):
         return redirect("post", username=username, post_id=post_id)
 
     if request.method != "POST":
-        form = PostForm(instance=post)
+        form = PostForm(instance=post, files=request.FILES or None)
         context = {
             "form": form,
             "is_edit": True,
-            "post": Post.objects.get(id=post_id),
+            "post": post,
         }
         return render(request, "post_new.html", context)
 
-    form = PostForm(request.POST, instance=post)
+    form = PostForm(request.POST or None, files=request.FILES or None, instance=post)
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user

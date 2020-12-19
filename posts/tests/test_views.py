@@ -37,7 +37,7 @@ class ViewPageContextTest(TestCase):
         cls.post = Post.objects.create(
             text="Текст поста.",
             group=cls.group,
-            author=cls.user1
+            author=cls.user1,
         )
 
         site = Site(pk=1, domain='localhost:8000', name='localhost:8000')
