@@ -138,12 +138,14 @@ class StaticURLTests(TestCase):
             response, reverse("post",
                               args=[self.user1.username, self.post.id]))
 
-    # def test_post_edit_guest_client_redirect(self):
-    #
-    #     response = self.guest_client.get(reverse("post_edit", kwargs={"username": self.user1.username,"post_id": self.post.id}))
-    #     print(response)
-    #     self.assertRedirects(
-    #         response,
-    #         reverse("post",
-    #                 kwargs={"username": self.user1.username,
-    #                         "post_id": self.post.id}))
+    def test_post_edit_guest_client_redirect(self):
+        response = self.guest_client.get(
+            reverse(
+                "post_edit",
+                kwargs={"username": self.user1.username,
+                        "post_id": 1}))
+        self.assertRedirects(
+            response,
+            reverse("post",
+                    kwargs={"username": self.user1.username,
+                            "post_id": self.post.id}))
