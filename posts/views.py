@@ -3,8 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.core.paginator import Paginator
 
-from .forms import PostForm
-from .models import Post, Group, User
+from .forms import PostForm, FormComments
+from .models import Post, Group, User, Comment
 
 
 def index(request):
@@ -72,11 +72,16 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
+    """Просмотр поста + комментарии"""
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     author_posts = post.author
+    comments = post.comments.all()
+    form = FormComments()
     context = {
         "author_posts": author_posts,
-        "post": post
+        "post": post,
+        "form": form,
+        "comments": comments
     }
 
     return render(request, "post.html", context)
@@ -110,3 +115,24 @@ def post_edit(request, username, post_id):
 
     }
     return render(request, "post_new.html", context)
+
+
+def add_comment(request, username, post_id):
+    """Форма комментариев"""
+    post = get_object_or_404(Post, id=post_id)
+    author = get_object_or_404(User, username=request.user)
+
+    if request.method != "POST":
+        form = FormComments()
+        context = {
+            "form": form
+        }
+        return render(request, "includes/comments.html", context)
+
+    form = FormComments(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.post = post
+        comment.author = author
+        comment.save()
+        return redirect("post", username=username, post_id=post_id)
