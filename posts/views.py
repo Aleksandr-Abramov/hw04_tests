@@ -136,3 +136,20 @@ def add_comment(request, username, post_id):
         comment.author = author
         comment.save()
         return redirect("post", username=username, post_id=post_id)
+
+
+def page_not_found(request, exception):
+    """Ошибка страницы"""
+    # Переменная exception содержит отладочную информацию,
+    # выводить её в шаблон пользователской страницы 404 мы не станем
+    return render(
+        request,
+        "misc/404.html",
+        {"path": request.path},
+        status=404
+    )
+
+
+def server_error(request):
+    """Ошибка сервира"""
+    return render(request, "misc/500.html", status=500)
