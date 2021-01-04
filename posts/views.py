@@ -6,10 +6,8 @@ from django.core.paginator import Paginator
 from .forms import PostForm, FormComments
 from .models import Post, Group, User, Comment
 
-from django.views.decorators.cache import cache_page
 
 
-@cache_page(20 * 1)
 def index(request):
     """Главная страницы"""
     posts = Post.objects.select_related("group")
