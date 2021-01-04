@@ -27,3 +27,5 @@ coverage.xml
 *.cover
 media/*
 media/
+caches_django/
+caches_django/*
